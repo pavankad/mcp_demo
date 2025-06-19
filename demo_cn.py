@@ -15,8 +15,6 @@ from langgraph.prebuilt import create_react_agent
 # Define the MCP server URL
 MCP_SERVER_URL = "http://127.0.0.1:8001/mcp"
 
-os.environ["OPENAI_API_KEY"] = "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"
-
 # Initialize model
 model = ChatOpenAI(model="gpt-4o", temperature=0)
 
