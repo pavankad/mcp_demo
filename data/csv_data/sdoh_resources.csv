@@ -1,0 +1,14 @@
+resource_id,patient_id,resource_type,provider,referral_date,status,notes
+RS77368,PT2E370DEB,Social Support,Social Support Services of State,2025-05-12,Not Eligible,
+RS45696,PT2E370DEB,Healthcare Access,Healthcare Access Services of State,2025-06-01,Engaged,Patient referred for healthcare access assistance
+RS40047,PT2E370DEB,Transportation,Transportation Services of State,2025-04-17,Declined,
+RS41876,PT0F013D1E,Healthcare Access,Healthcare Access Services of Federal,2025-05-22,Declined,Patient referred for healthcare access assistance
+RS19234,PT0F013D1E,Social Support,Social Support Services of Metro Area,2025-03-31,Completed,Patient referred for social support assistance
+RS32785,PT424192C6,Social Support,Social Support Services of Federal,2025-05-14,Completed,Patient referred for social support assistance
+RS21121,PT679C8823,Food,Food Services of Metro Area,2025-04-21,Declined,Patient referred for food assistance
+RS60538,PT679C8823,Transportation,Transportation Services of State,2025-03-27,Engaged,Patient referred for transportation assistance
+RS80667,PTEF276EC8,Housing,Housing Services of Federal,2025-04-25,Engaged,Patient referred for housing assistance
+RS26544,PTEF276EC8,Healthcare Access,Healthcare Access Services of State,2025-05-17,Completed,
+RS34559,PTEF276EC8,Social Support,Social Support Services of State,2025-04-04,Declined,
+RS74163,PTAC08D7F6,Education,Education Services of Metro Area,2025-04-08,Not Eligible,
+RS36149,PT0105376E,Education,Education Services of State,2025-04-15,Referred,

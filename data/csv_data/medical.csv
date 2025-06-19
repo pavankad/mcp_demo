@@ -1,0 +1,11 @@
+patient_id,allergies,conditions,medications
+PTFC2CDAC0,Latex|Dust,Asthma,None
+PT2E370DEB,Peanuts|Penicillin,Arthritis,Metformin
+PT0F013D1E,Penicillin|Pollen|None,None|Hypertension,None
+PT424192C6,Penicillin|None,None,Levothyroxine|Atorvastatin
+PT679C8823,Pollen|Peanuts|Latex,None,Metformin
+PT88BFDFE4,None,None,Lisinopril|Atorvastatin|None
+PTEF276EC8,Penicillin,None,None
+PTAC08D7F6,Peanuts|None|Pollen,Hypertension|Diabetes,Metformin
+PT0105376E,Peanuts,None,Atorvastatin
+PTBAED52C8,None|Dust,Arthritis,Metformin|None|Lisinopril

@@ -1,0 +1,11 @@
+patient_id,status,completion_date,risk_score,risk_level,next_assessment_due
+PTFC2CDAC0,Completed,2025-04-19,42,4,2026-05-22
+PT2E370DEB,Completed,2025-04-22,19,5,2025-10-24
+PT0F013D1E,Not Started,,,3,2025-09-21
+PT424192C6,Expired,,,3,2025-12-19
+PT679C8823,Expired,,,3,2025-11-23
+PT88BFDFE4,Expired,,,4,2026-05-10
+PTEF276EC8,Completed,2025-06-09,97,5,2026-04-24
+PTAC08D7F6,Pending,,,4,2026-04-07
+PT0105376E,Completed,2025-03-30,49,4,2026-06-13
+PTBAED52C8,Not Started,,,2,2026-06-17

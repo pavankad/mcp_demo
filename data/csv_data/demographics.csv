@@ -1,0 +1,11 @@
+patient_id,first_name,last_name,full_name,gender,age,date_of_birth,blood_type,ethnicity,marital_status,ssn,email,phone,address,insurance_provider,policy_number,group_number
+PTFC2CDAC0,Patricia,Smith,Patricia Smith,Female,23,2002-12-12,O+,Pacific Islander,Married,739-71-6232,patricia.smith@example.com,127-929-1354,"2575 Main St, Anytown, ST 70679",Blue Cross,702646,6556
+PT2E370DEB,Linda,Jones,Linda Jones,Non-binary,46,1979-10-22,AB+,Other,Divorced,966-31-3874,linda.jones@example.com,314-516-5564,"6255 Main St, Anytown, ST 29098",Aetna,986843,9080
+PT0F013D1E,John,Taylor,John Taylor,Prefer not to say,33,1992-08-23,AB+,Other,Married,186-78-4669,john.taylor@example.com,781-139-7053,"5812 Main St, Anytown, ST 36116",Medicare,856957,3250
+PT424192C6,Patricia,Davis,Patricia Davis,Prefer not to say,32,1993-07-20,A+,Pacific Islander,Widowed,282-10-8779,patricia.davis@example.com,989-885-8945,"6828 Main St, Anytown, ST 35913",Medicaid,163878,2257
+PT679C8823,Mary,Smith,Mary Smith,Male,81,1944-07-02,O+,Caucasian,Married,233-14-1315,mary.smith@example.com,396-920-6020,"1515 Main St, Anytown, ST 28339",UnitedHealth,651959,3952
+PT88BFDFE4,William,Johnson,William Johnson,Prefer not to say,20,2005-02-04,A-,Hispanic,Widowed,817-95-9904,william.johnson@example.com,921-324-7051,"8066 Main St, Anytown, ST 68305",Medicare,969628,1435
+PTEF276EC8,James,White,James White,Non-binary,84,1941-04-12,A+,Hispanic,Widowed,997-35-6633,james.white@example.com,678-771-6565,"2029 Main St, Anytown, ST 20926",Blue Cross,409129,9272
+PTAC08D7F6,Linda,Smith,Linda Smith,Prefer not to say,42,1983-10-07,B-,Pacific Islander,Married,432-75-4810,linda.smith@example.com,613-917-7672,"4765 Main St, Anytown, ST 51554",Medicare,142458,3035
+PT0105376E,Jessica,Smith,Jessica Smith,Female,34,1991-10-06,AB-,Pacific Islander,Married,816-60-1551,jessica.smith@example.com,595-667-8618,"2866 Main St, Anytown, ST 68618",Aetna,932589,6050
+PTBAED52C8,Mary,Johnson,Mary Johnson,Male,24,2001-10-24,AB+,Mixed,Single,197-49-9041,mary.johnson@example.com,699-409-1246,"5298 Main St, Anytown, ST 61405",Medicare,609217,3628
