@@ -141,5 +141,88 @@ def update_care_plan(first_name: str, last_name: str, dob: str, care_plan_items:
     except requests.exceptions.RequestException as e:
         return {"error": f"API request error: {str(e)}"}
 
+@mcp.tool()
+def update_sdoh_resources(first_name: str, last_name: str, dob: str, resources: list) -> dict:
+    """
+    Update or add SDOH resources for a patient
+    
+    Parameters:
+    - first_name: Patient's first name
+    - last_name: Patient's last name
+    - dob: Patient's date of birth in YYYY-MM-DD format
+    - resources: List of resources to update or add, each containing:
+        - resource_id (optional): ID of existing resource to update
+        - resource_type (required for new): Type of resource (e.g., "Food", "Housing")
+        - provider (required for new): Name of service provider
+        - status (required for new): Status of referral (e.g., "Referred", "Engaged")
+        - referral_date (optional): Date of referral in YYYY-MM-DD format
+        - notes (optional): Additional notes about the referral
+    """
+    try:
+        # First, get patient_id from demographics
+        response = requests.get(f"{API_BASE_URL}/find_patient", 
+                              params={"first_name": first_name, "last_name": last_name, "dob": dob})
+        response.raise_for_status()
+        data = response.json()
+        
+        if "error" in data:
+            return data
+            
+        patient_id = data.get("patient_id")
+        
+        # Prepare request payload for updating SDOH resources
+        payload = {
+            "patient_id": patient_id,
+            "resources": resources
+        }
+        
+        # Call the API to update resources
+        response = requests.post(f"{API_BASE_URL}/sdoh_resources/update", json=payload)
+        response.raise_for_status()
+        result = response.json()
+        
+        # Add patient info to the response for context
+        result["patient"] = f"{first_name} {last_name} (DOB: {dob})"
+        
+        return result
+    except requests.exceptions.RequestException as e:
+        return {"error": f"API request error: {str(e)}"}
+
+@mcp.tool()
+def delete_patient_sdoh_resources(first_name: str, last_name: str, dob: str) -> dict:
+    """
+    Delete all SDOH resources for a specific patient
+    
+    Parameters:
+    - first_name: Patient's first name
+    - last_name: Patient's last name
+    - dob: Patient's date of birth in YYYY-MM-DD format
+    """
+    try:
+        # First, get patient_id from demographics
+        response = requests.get(f"{API_BASE_URL}/find_patient", 
+                              params={"first_name": first_name, "last_name": last_name, "dob": dob})
+        response.raise_for_status()
+        data = response.json()
+        
+        if "error" in data:
+            return data
+            
+        patient_id = data.get("patient_id")
+        
+        # Call the API to delete SDOH resources for this patient
+        response = requests.delete(f"{API_BASE_URL}/sdoh_resources/delete/{patient_id}")
+        response.raise_for_status()
+        result = response.json()
+        
+        # Add patient info to the response for context
+        result["patient"] = f"{first_name} {last_name} (DOB: {dob})"
+        
+        return result
+    except requests.exceptions.RequestException as e:
+        return {"error": f"API request error: {str(e)}"}
+
+
+
 if __name__ == "__main__":
     mcp.run(transport="streamable-http", host="127.0.0.1", port=8001)

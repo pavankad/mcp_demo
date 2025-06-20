@@ -9,14 +9,31 @@ import asyncio
 import os
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+
+# Get Azure token
+default_credential = DefaultAzureCredential()
+access_token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
+
+# Set API key from the access token
+os.environ['OPENAI_API_KEY'] = access_token.token
+os.environ['AZURE_OPENAI_ENDPOINT'] = 'https://api.uhg.com/api/cloud/api-management/ai-gateway/1.0'
 # Define the MCP server URL
 MCP_SERVER_URL = "http://127.0.0.1:8001/mcp"
 
-# Initialize model
-model = ChatOpenAI(model="gpt-4o", temperature=0)
+# Initialize model with Azure-specific parameters
+model = AzureChatOpenAI(
+    azure_deployment="gpt-4o_2024-05-13",  # The deployment name in Azure
+    api_version="2025-01-01-preview",  # Azure API version
+    default_headers={
+        "projectId": "f440d3f1-df7a-45fb-a62f-5953aaf6bd55",
+        "x-idp": "azuread"
+    }
+)
+
 
 
 # Set page configuration
@@ -70,6 +87,66 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+
+# Function to get community resources based on zipcode and resource type
+def get_community_services(resource_type, zipcode):
+    """
+    Searches for community services based on zipcode and resource type.
+    This simulates an API call to an external service like FindHelp.org or 211.org.
+    
+    In a production environment, replace this with actual API calls.
+    """
+    try:
+        # First, convert zipcode to coordinates using geocoding
+        geolocator = Nominatim(user_agent="care_navigator_app")
+        location = geolocator.geocode(f"{zipcode}, USA")
+        
+        if not location:
+            return {"error": f"Could not geocode zipcode {zipcode}"}
+        
+        # Simulate API delay
+        time.sleep(1)
+        
+        # Simulate API results with realistic data
+        service_types = {
+            "food": [
+                {"name": "Local Food Bank", "address": f"{zipcode} Main St", "phone": "555-123-4567", "website": "foodbank.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Community Pantry", "address": f"{zipcode} Oak Ave", "phone": "555-987-6543", "website": "communitypantry.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Meals on Wheels", "address": f"{zipcode} Elm St", "phone": "555-789-0123", "website": "mealsonwheels.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"}
+            ],
+            "transportation": [
+                {"name": "Medical Transit", "address": f"{zipcode} Pine Rd", "phone": "555-321-7654", "website": "medicaltransit.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Senior Rides", "address": f"{zipcode} Cedar Ln", "phone": "555-456-7890", "website": "seniorrides.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Community Transport", "address": f"{zipcode} Maple Ave", "phone": "555-234-5678", "website": "communitytransport.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"}
+            ],
+            "housing": [
+                {"name": "Housing Assistance", "address": f"{zipcode} Birch St", "phone": "555-876-5432", "website": "housinghelp.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Shelter Services", "address": f"{zipcode} Willow Rd", "phone": "555-654-3210", "website": "shelterservices.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Transitional Housing", "address": f"{zipcode} Aspen Ave", "phone": "555-210-9876", "website": "transitionalhousing.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"}
+            ],
+            "utilities": [
+                {"name": "Utility Assistance", "address": f"{zipcode} Spruce St", "phone": "555-543-2109", "website": "utilityhelp.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"},
+                {"name": "Energy Assistance", "address": f"{zipcode} Fir Ave", "phone": "555-432-1098", "website": "energyhelp.org", "distance": f"{random.randint(1, 5)}.{random.randint(1, 9)} miles"}
+            ]
+        }
+        
+        # Default to food services if resource type not found
+        resource_type_key = resource_type.lower()
+        services = service_types.get(resource_type_key, service_types["food"])
+        
+        # Add location data to each service
+        for service in services:
+            # In a real implementation, you would use the location's coordinates to calculate actual distance
+            # For now, we'll use random distances for demonstration
+            service["lat"] = location.latitude + (random.random() - 0.5) * 0.05
+            service["lon"] = location.longitude + (random.random() - 0.5) * 0.05
+        
+        return {"services": services, "location": {"lat": location.latitude, "lon": location.longitude}}
+        
+    except Exception as e:
+        return {"error": str(e)}
+
 
 # Helper function to send query to the MCP server
 async def query_mcp(query):
@@ -544,6 +621,26 @@ if st.session_state.patient_data:
     elif st.session_state.active_tab == "SDOH Resources":
         st.markdown('<h2 class="section-header">Social Determinants of Health Resources</h2>', unsafe_allow_html=True)
         
+        # Get patient's demographics to extract zip code
+        demographics = st.session_state.patient_data.get('demographics', {})
+        patient_address = demographics.get('address', '')
+        
+        # Extract zip code from address (assuming US format where zip code is last 5 digits)
+        patient_zipcode = None
+        if patient_address:
+            # Try to extract zipcode from address using regex
+            zip_match = re.search(r'(\d{5}(?:-\d{4})?)', patient_address)
+            if zip_match:
+                patient_zipcode = zip_match.group(1)[:5]  # Take only first 5 digits
+        
+        # Display patient address and zip code if available
+        if patient_address:
+            st.markdown("### Patient Location")
+            st.write(f"**Address:** {patient_address}")
+            if patient_zipcode:
+                st.write(f"**ZIP Code:** {patient_zipcode}")
+        
+        # Display existing SDOH resources
         sdoh_resources = st.session_state.patient_data.get('sdoh_resources', [])
         
         if sdoh_resources and len(sdoh_resources) > 0:
@@ -554,50 +651,135 @@ if st.session_state.patient_data:
             st.markdown("### Patient Resources")
             st.dataframe(df, use_container_width=True)
             
-            # Show distribution of resource types
-            st.markdown("### Resource Types Distribution")
-            resource_types = df['resource_type'].value_counts().reset_index()
-            resource_types.columns = ['Resource Type', 'Count']
-            st.bar_chart(resource_types.set_index('Resource Type'))
-            
-            # Show referral status distribution
-            st.markdown("### Referral Status")
-            status_counts = df['status'].value_counts().reset_index()
-            status_counts.columns = ['Status', 'Count']
-            st.bar_chart(status_counts.set_index('Status'))
-            
-            # Add a section to add a new resource referral
-            st.markdown("### Add New Resource Referral")
-            col1, col2 = st.columns(2)
-            with col1:
-                resource_type = st.selectbox(
-                    "Resource Type",
-                    ["Housing", "Food", "Transportation", "Education", "Employment", "Financial", "Healthcare Access", "Social Support"]
-                )
-                provider = st.text_input("Provider Name")
-            with col2:
-                notes = st.text_area("Notes")
-            
-            if st.button("Add Referral"):
-                st.success(f"Referral added for {resource_type} services!")
+            # Show distribution of resource types if the column exists
+            if 'resource_type' in df.columns:
+                st.markdown("### Resource Types Distribution")
+                resource_types = df['resource_type'].value_counts().reset_index()
+                resource_types.columns = ['Resource Type', 'Count']
+                st.bar_chart(resource_types.set_index('Resource Type'))
                 
+                # Show referral status distribution if the column exists
+                if 'status' in df.columns:
+                    st.markdown("### Referral Status")
+                    status_counts = df['status'].value_counts().reset_index()
+                    status_counts.columns = ['Status', 'Count']
+                    st.bar_chart(status_counts.set_index('Status'))
+        
+        # Add the "Add New Resource Referral" section
+        st.markdown("### Add New Resource Referral")
+        col1, col2 = st.columns(2)
+        
+        # Initialize session state for provider and notes if they don't exist
+        if 'provider' not in st.session_state:
+            st.session_state.provider = ""
+        if 'notes' not in st.session_state:
+            st.session_state.notes = ""
+            
+        with col1:
+            resource_type = st.selectbox(
+                "Resource Type",
+                ["Housing", "Food", "Transportation", "Utilities", "Education", "Employment", "Financial", "Healthcare Access", "Social Support"]
+            )
+            provider = st.text_input("Provider Name", value=st.session_state.provider)
+        with col2:
+            notes = st.text_area("Notes", value=st.session_state.notes)
+        
+        # Search for community services if we have a zip code
+        if patient_zipcode:
+            st.markdown(f"### Available {resource_type} Resources Near {patient_zipcode}")
+            
+            # Import required modules if not already imported
+            from geopy.geocoders import Nominatim
+            import time
+            import random
+            
+            with st.spinner(f"Finding {resource_type} resources near {patient_zipcode}..."):
+                # Get community services for the selected resource type and patient's zip code
+                services_result = get_community_services(resource_type.lower(), patient_zipcode)
+                
+                if "error" in services_result:
+                    st.error(f"Error finding resources: {services_result['error']}")
+                else:
+                    services = services_result.get("services", [])
+                    location = services_result.get("location", {})
+                    
+                    if services:
+                        # Sort services by distance (assuming distance is in format "X.Y miles")
+                        def extract_distance(distance_str):
+                            try:
+                                return float(distance_str.split()[0])
+                            except:
+                                return float('inf')  # If parsing fails, place at end
+                        
+                        services.sort(key=lambda x: extract_distance(x['distance']))
+                        closest_service = services[0]  # Get the closest service
+                        
+                        # Create a dataframe to display all services
+                        services_df = pd.DataFrame(services)
+                        st.markdown("#### All Available Resources (Sorted by Distance)")
+                        st.dataframe(services_df, use_container_width=True)
+                        
+                        # Show the closest service with visual highlight
+                        st.markdown("#### Closest Resource (Auto-selected)")
+                        st.markdown(f"""
+                        <div style="padding: 1rem; background-color: #E8F5E9; border-left: 5px solid #4CAF50; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <h5 style="color: #2E7D32;">{closest_service['name']}</h5>
+                            <p><strong>Address:</strong> {closest_service['address']}<br>
+                            <strong>Phone:</strong> {closest_service['phone']}<br>
+                            <strong>Distance:</strong> {closest_service['distance']}<br>
+                            <strong>Website:</strong> {closest_service.get('website', 'N/A')}</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Auto-populate the provider and notes fields with the closest service
+                        st.session_state.provider = closest_service['name']
+                        st.session_state.notes = f"Address: {closest_service['address']}\nPhone: {closest_service['phone']}\nWebsite: {closest_service.get('website', 'N/A')}\nDistance: {closest_service['distance']}"
+                        
+                        # Update the form fields
+                        provider = closest_service['name']
+                        notes = st.session_state.notes
+                        
+                        # Show a map if we have location data
+                        if location:
+                            st.markdown("#### Map of Resources")
+                            map_data = pd.DataFrame({
+                                'name': [s['name'] for s in services],
+                                'lat': [s['lat'] for s in services],
+                                'lon': [s['lon'] for s in services]
+                            })
+                            st.map(map_data)
+                            
+                        # Option to choose a different service
+                        st.markdown("#### Select Different Resource")
+                        selected_service_index = st.selectbox(
+                            "Select a different resource if preferred:",
+                            range(len(services)),
+                            format_func=lambda i: f"{services[i]['name']} - {services[i]['distance']}",
+                            key="service_selector"
+                        )
+                        
+                        if st.button("Use Selected Resource"):
+                            selected_service = services[selected_service_index]
+                            st.session_state.provider = selected_service['name']
+                            st.session_state.notes = f"Address: {selected_service['address']}\nPhone: {selected_service['phone']}\nWebsite: {selected_service.get('website', 'N/A')}\nDistance: {selected_service['distance']}"
+                            #st.experimental_rerun()
+                    else:
+                        st.info(f"No {resource_type.lower()} resources found near ZIP {patient_zipcode}")
         else:
-            st.info("No SDOH resources found for this patient")
-            
-            # Add a section to add a new resource referral
-            st.markdown("### Add New Resource Referral")
-            col1, col2 = st.columns(2)
-            with col1:
-                resource_type = st.selectbox(
-                    "Resource Type",
-                    ["Housing", "Food", "Transportation", "Education", "Employment", "Financial", "Healthcare Access", "Social Support"]
-                )
-                provider = st.text_input("Provider Name")
-            with col2:
-                notes = st.text_area("Notes")
-            
-            if st.button("Add Referral"):
-                st.success(f"Referral added for {resource_type} services!")
+            st.warning("Patient's ZIP code could not be detected. Please update the patient's address information.")
+        
+        # Add referral button
+        if st.button("Add Referral"):
+            if not provider:
+                st.error("Please enter a provider name")
+            else:
+                with st.spinner("Adding referral..."):
+                    # Simulate API call to add the referral
+                    st.success(f"Referral added for {resource_type} services with provider {provider}!")
+                    
+                    # Reset the form fields
+                    st.session_state.provider = ""
+                    st.session_state.notes = ""
     
     # Free-text Query tab
     elif st.session_state.active_tab == "Free-text Query":

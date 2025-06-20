@@ -5,14 +5,28 @@ import os
 import pdb
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from langchain_openai import ChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-# Configure OpenAI API key
+from azure.identity import DefaultAzureCredential
 
-# Initialize model
-model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+# Get Azure token
+default_credential = DefaultAzureCredential()
+access_token = default_credential.get_token("https://cognitiveservices.azure.com/.default")
 
+# Set API key from the access token
+os.environ['OPENAI_API_KEY'] = access_token.token
+os.environ['AZURE_OPENAI_ENDPOINT'] = "https://api.uhg.com/api/cloud/api-management/ai-gateway/1.0"
+
+# Initialize model with Azure-specific parameters
+model = AzureChatOpenAI(
+    azure_deployment="gpt-4o_2024-05-13",  # The deployment name in Azure
+    api_version="2025-01-01-preview",  # Azure API version
+    default_headers={
+        "projectId": "f440d3f1-df7a-45fb-a62f-5953aaf6bd55",
+        "x-idp": "azuread"
+    }
+)
 
 async def main(query: str):
     """Main function to process queries using the MCP client."""
@@ -69,7 +83,7 @@ def process_and_print_response(response):
 
 
 if __name__ == "__main__":
-    patient = "{\"first_name\":\"Michael\",\"last_name\":\"Brown\", \"dob\":\"1997-09-15\"}"
+    patient = "{\"first_name\":\"Patricia\",\"last_name\":\"Smith\", \"dob\":\"2002-12-12\"}"
     response = asyncio.run(main(f'Get demographics for {patient}'))
     print("\n------------Get the patient details------------")
     print(response)
